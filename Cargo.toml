@@ -1,0 +1,18 @@
+[package]
+name = "relm4ex"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.relm4]
+version = "0.5.0-rc.2"
+features = ["macros", "libadwaita"]
+
+[dependencies.gtk4]
+version = "0.5.5"
+features = ["v4_6"]
+
+[dependencies.libadwaita]
+version = "0.2.1"
+features = ["v1_2"]
