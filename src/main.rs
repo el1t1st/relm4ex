@@ -1,6 +1,15 @@
+//
+// Create a form with a Question TextInput and an Answer with a multi-line
+// textarea.
+//
+// After pressing the save button a new MenuItem is created and pushed to the Vector
+// holding all the MenuItems.
+//
+// Create a FactorVecDeque (Relm4) to show the MenuItem List
+//
 use gtk::prelude::{
-	BoxExt, ButtonExt, EntryBufferExt, EntryBufferExtManual, EntryExt,
-	GtkWindowExt, OrientableExt, TextViewExt,
+	BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, GtkWindowExt,
+	OrientableExt,
 };
 
 use relm4::{
@@ -10,19 +19,16 @@ use relm4::{
 #[derive(Debug)]
 struct MemItem {
 	question: String,
-	answer: String,
 }
 
+#[derive(Debug, Default)]
 struct AppModel {
-	question_to_save: String,
-	answer_to_save: String,
+	question: gtk::EntryBuffer,
 	list: Vec<MemItem>,
 }
 
 #[derive(Debug)]
 enum AppMsg {
-	SaveQuestion(String),
-	SaveAnswer(String),
 	SaveMemItem,
 }
 
@@ -35,55 +41,27 @@ impl SimpleComponent for AppModel {
 	type Output = ();
 
 	view! {
-		gtk::Window {
-				set_title: Some("The Relm Experiment"),
-				set_default_width: 400,
-				set_default_height: 200,
+	gtk::Window {
+			set_title: Some("The Relm Experiment"),
+			set_default_width: 400,
+			set_default_height: 200,
 
-				gtk::Box {
-						set_orientation: gtk::Orientation::Vertical,
-						set_spacing: 5,
-						set_margin_all: 5,
+			gtk::Box {
+					set_orientation: gtk::Orientation::Vertical,
+					set_spacing: 5,
+					set_margin_all: 5,
 
-						#[name ="new_question"]
-						gtk::Entry {
-								set_placeholder_text: Some("Enter Question"),
-								connect_activate[sender] => move |entry| {
-										// let buffer = entry.buffer();
-										// if !buffer.text().is_empty() {
-												// sender.output(AppMsg::SaveQuestion(buffer.text())).unwrap_or_default();
-									println!("new question: {:#?}", entry);
-									sender.input(AppMsg::SaveQuestion(String::from("TODO")));
-									//
-								}
-						},
-						#[name ="new_answer"]
-						gtk::Entry {
-								set_placeholder_text: Some("Enter Answer"),
-								connect_activate[sender] => move |entry| {
-									// let buffer = entry.buffer();
-									println!("new_answer {:#?}", entry);
-									sender.input(AppMsg::SaveAnswer(String::from("TOQuestion")));
-								}
-						},
-						// #[name ="new_answer"]
-						// gtk::TextView {
-						// 		connect_activate[sender] => move |entry| {
-						// 				let buffer = entry.buffer();
-						// 				if !buffer.text().is_empty() {
-						// 						// sender.output(AppMsg::SaveAnswer(buffer.text())).unwrap_or_default();
-						// 					sender.input(AppMsg::SaveQuestion(buffer.text()));
-						// 				}
-						// 		}
-						// },
-						#[name ="save_button"]
-						gtk::Button {
-								set_label: "Save",
-								connect_clicked[sender] => move |_| {
-										sender.input(AppMsg::SaveMemItem);
-								}
-						}
-				}
+					gtk::Entry {
+						set_buffer: &model.question,
+						set_placeholder_text: Some("Enter Question"),
+					},
+					gtk::Button {
+							set_label: "Save",
+							connect_clicked[sender] => move |_| {
+									sender.input(AppMsg::SaveMemItem);
+							}
+					}
+			}
 		}
 	}
 
@@ -93,11 +71,7 @@ impl SimpleComponent for AppModel {
 		root: &Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let model = AppModel {
-			question_to_save: String::new(),
-			answer_to_save: String::new(),
-			list: Vec::new(),
-		};
+		let model = AppModel::default();
 
 		// Insert the macro code generation here from view! macro
 		let widgets = view_output!();
@@ -108,28 +82,29 @@ impl SimpleComponent for AppModel {
 	// Update logics for saving
 	fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
 		match msg {
-			AppMsg::SaveQuestion(text) => {
-				self.question_to_save = text;
+			AppMsg::SaveMemItem => {
+				// check if the question is empty
+				if !self.question.text().is_empty() {
+					println!("The question: {:?}", self.question.text());
+					self.list.push(MemItem {
+						// Todo: Why is there an error here?
+						question: self.question.text().to_string(),
+					});
+					println!("The list: {:#?}", self.list);
+					// Clean up the input fields after pushing to list
+					self.question.set_text("")
+				} else {
+					println!("The question cannot be empty");
+					// here you can set the error message
+				}
 			},
-			AppMsg::SaveAnswer(text) => {
-				self.answer_to_save = text;
-			},
-			// TODO: Here we need to add a check ... if not self.answer_to_save is empty and not
-			// self.question_to_save ... is empty then
-			AppMsg::SaveMemItem => self.list.push(MemItem {
-				// The issue!!! clone!
-				question: self.question_to_save.clone(),
-				answer: self.answer_to_save.clone(),
-			}),
 		}
 	}
 }
 
 fn main() {
 	let app = RelmApp::new("relm4.experiment");
-	app.run::<AppModel>(AppModel {
-		question_to_save: String::new(),
-		answer_to_save: String::new(),
-		list: Vec::new(),
-	});
+	// Todo: why do we need to pass it a second time although we have already defined it in fn init?
+	let model = AppModel::default();
+	app.run::<AppModel>(model);
 }
