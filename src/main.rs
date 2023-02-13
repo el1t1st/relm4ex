@@ -7,9 +7,13 @@
 //
 // Create a FactorVecDeque (Relm4) to show the MenuItem List
 //
-use gtk::prelude::{
-	BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, GtkWindowExt,
-	OrientableExt,
+use gtk::{
+	prelude::{
+		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, GtkWindowExt,
+		OrientableExt, TextBufferExt, TextViewExt,
+	},
+	traits::WidgetExt,
+	TextTagTable,
 };
 
 use relm4::{
@@ -19,11 +23,13 @@ use relm4::{
 #[derive(Debug)]
 struct MemItem {
 	question: String,
+	answer: String,
 }
 
 #[derive(Debug, Default)]
 struct AppModel {
 	question: gtk::EntryBuffer,
+	answer: gtk::TextBuffer,
 	list: Vec<MemItem>,
 }
 
@@ -55,6 +61,12 @@ impl SimpleComponent for AppModel {
 						set_buffer: &model.question,
 						set_placeholder_text: Some("Enter Question"),
 					},
+					gtk::TextView {
+						set_buffer: Some(&model.answer),
+						set_editable: true,
+						set_wrap_mode: gtk::WrapMode::Word,
+					},
+
 					gtk::Button {
 							set_label: "Save",
 							connect_clicked[sender] => move |_| {
@@ -83,20 +95,8 @@ impl SimpleComponent for AppModel {
 	fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
 		match msg {
 			AppMsg::SaveMemItem => {
-				// check if the question is empty
-				if !self.question.text().is_empty() {
-					println!("The question: {:?}", self.question.text());
-					self.list.push(MemItem {
-						// Todo: Why is there an error here?
-						question: self.question.text().to_string(),
-					});
-					println!("The list: {:#?}", self.list);
-					// Clean up the input fields after pushing to list
-					self.question.set_text("")
-				} else {
-					println!("The question cannot be empty");
-					// here you can set the error message
-				}
+				println!("Question is working: {:#?}", self.question.text());
+				println!("Working on answer: {:#?}", self.answer);
 			},
 		}
 	}
