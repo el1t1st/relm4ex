@@ -49,8 +49,8 @@ impl SimpleComponent for AppModel {
 	view! {
 	gtk::Window {
 			set_title: Some("The Relm Experiment"),
-			set_default_width: 400,
-			set_default_height: 200,
+			set_default_width: 700,
+			set_default_height: 500,
 
 			gtk::Box {
 					set_orientation: gtk::Orientation::Vertical,
@@ -59,9 +59,16 @@ impl SimpleComponent for AppModel {
 
 					gtk::Entry {
 						set_buffer: &model.question,
-						set_placeholder_text: Some("Enter Question"),
+						set_placeholder_text: Some("What is the Question"),
 					},
+					gtk::Label {
+						set_halign: gtk::Align::Start,
+						set_label: "What is the the answer?:",
+						set_margin_all: 5,
+				},
 					gtk::TextView {
+						set_margin_all: 5,
+						set_height_request: 100,
 						set_buffer: Some(&model.answer),
 						set_editable: true,
 						set_wrap_mode: gtk::WrapMode::Word,
@@ -95,8 +102,18 @@ impl SimpleComponent for AppModel {
 	fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
 		match msg {
 			AppMsg::SaveMemItem => {
-				println!("Question is working: {:#?}", self.question.text());
-				println!("Working on answer: {:#?}", self.answer);
+				let question = self.question.text();
+				println!("Loaded question: {:#?}", question);
+				let answer = self
+					.answer
+					.text(&self.answer.start_iter(), &self.answer.end_iter(), true)
+					.to_string();
+				println!("Loaded TextBuffer: {:#?}", answer);
+				// check if both fields are not empty before saving
+				if !answer.is_empty() && !question.is_empty() {
+					self.list.push(MemItem { question, answer });
+					println!("The updated list: {:#?}", self.list);
+				}
 			},
 		}
 	}
