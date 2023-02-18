@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 pango = "0.17.0"
+gdk4 = "0.6.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
