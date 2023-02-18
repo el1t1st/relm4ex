@@ -1,11 +1,13 @@
 use gtk::{
+	gdk::Display,
+	pango,
 	prelude::{
 		BoxExt, GtkApplicationExt, GtkWindowExt, TextBufferExt,
 		TextBufferExtManual, TextTagExt, TextViewExt,
 	},
 	traits::WidgetExt,
+	TextTagTable,
 };
-use pango::*;
 use relm4::{
 	gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent,
 };
@@ -27,7 +29,8 @@ struct AppModel {
 	base_text: gtk::TextBuffer,
 	cursor_index: u16,
 	keypress_result: bool,
-	// pango_attrlist: pango::AttrList,
+	css_provider: gtk::CssProvider,
+	display: gtk::gdk::Display,
 }
 
 #[derive(Debug)]
@@ -67,21 +70,39 @@ impl SimpleComponent for AppModel {
 	) -> relm4::ComponentParts<Self> {
 		// Initialize the AppModel / state
 		let mut model = AppModel {
-			base_text: model.base_text,
-			cursor_index: model.cursor_index,
-			keypress_result: model.keypress_result,
+			base_text: gtk::TextBuffer::new(None),
+			cursor_index: 0,
+			keypress_result: false,
+			css_provider: gtk::CssProvider::new(),
+			display: gtk::gdk::Display::default().unwrap(),
 		};
-		// Start the cursor at 0
-		model.cursor_index = 0;
-		model.keypress_result = true;
+		// Activate CSS Provider
+		model.css_provider.connect_parsing_error(|_, _, error| {
+			println!("{:?}", error);
+		});
+
+		model.css_provider.load_from_path("test.css");
+		// match ret {
+		// 	Ok(ret) => println!("Worked? {:?}", ret),
+		// 	Err(error) => println!("Worked? {:?}", error),
+		// }
+
+		gtk::StyleContext::add_provider_for_display(
+			&model.display,
+			&model.css_provider,
+			gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+		);
 
 		// Push the initial TEXT to the base_text
 		model.base_text.set_text(TEXT);
+		model.css_provider.load_from_path("test.css");
+
 		// todo: fix this
 		let tag = model
 			.base_text
 			.tag_table()
-			.create_tag(Some("orange_bg"), bgcolor = "orange");
+			.create_tag(Some("orange"), bgcolor = "orange");
+
 		model.base_text.apply_tag(
 			tag,
 			&model.base_text.start_iter(),
@@ -152,5 +173,6 @@ fn main() {
 		base_text: gtk::TextBuffer::new(None),
 		cursor_index: 0,
 		keypress_result: true,
+		css_provider: gtk::CssProvider::new(),
 	});
 }
