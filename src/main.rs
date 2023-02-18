@@ -1,127 +1,158 @@
-//
-// Create a form with a Question TextInput and an Answer with a multi-line
-// textarea.
-//
-// After pressing the save button a new MenuItem is created and pushed to the Vector
-// holding all the MenuItems.
-//
-// Create a FactorVecDeque (Relm4) to show the MenuItem List
-//
-use gtk::{
-	prelude::{
-		BoxExt, ButtonExt, EntryBufferExtManual, EntryExt, GtkWindowExt,
-		OrientableExt, TextBufferExt, TextViewExt,
-	},
-	traits::WidgetExt,
-	TextTagTable,
+use gtk::prelude::{
+	BoxExt, ButtonExt, GtkWindowExt, TextBufferExt, TextViewExt,
 };
-
+use gtk::{glib::clone, traits::WidgetExt};
 use relm4::{
-	gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent,
+	gtk, tokio::runtime::TryCurrentError, ComponentParts, ComponentSender,
+	RelmApp, RelmWidgetExt, SimpleComponent,
 };
 
-#[derive(Debug)]
-struct MemItem {
-	question: String,
-	answer: String,
-}
+// Since I can't seem to get the overlay working, I will focus
+// first on showing a text in one textview
+// And in the other textview I will type the text
+// And in a label i will show the correct or incorrect
+// That way I can at least have the process of comparing
+// each character and keypress
+// By using Pango it is possible to change the color of
+// characters with start_iter / end_iter and Pango tags
 
-#[derive(Debug, Default)]
+const TEXT: &str = "Trying to create an overlay for a TextView";
+const TEXT2: &str = "Testing to see how to show two texts";
+
 struct AppModel {
-	question: gtk::EntryBuffer,
-	answer: gtk::TextBuffer,
-	list: Vec<MemItem>,
+	base_text: gtk::TextBuffer,
+	overlay_text: gtk::TextBuffer,
+	cursor_index: u16,
+	keypress_result: bool,
 }
 
 #[derive(Debug)]
-enum AppMsg {
-	SaveMemItem,
+enum AppInput {
+	// Define the Messages
+	CheckChar(u16),
 }
 
-#[relm4::component]
+struct AppWidgets {
+	// We can leave the label for now
+	base_textview: gtk::TextView,
+	overlay_textview: gtk::TextView,
+}
+
 impl SimpleComponent for AppModel {
-	type Widgets = AppWidgets;
-	type Init = AppModel;
-
-	type Input = AppMsg;
+	type Input = AppInput;
 	type Output = ();
+	type Init = AppModel;
+	type Root = gtk::Window;
+	type Widgets = AppWidgets;
 
-	view! {
-	gtk::Window {
-			set_title: Some("The Relm Experiment"),
-			set_default_width: 700,
-			set_default_height: 500,
-
-			gtk::Box {
-					set_orientation: gtk::Orientation::Vertical,
-					set_spacing: 5,
-					set_margin_all: 5,
-
-					gtk::Entry {
-						set_buffer: &model.question,
-						set_placeholder_text: Some("What is the Question"),
-					},
-					gtk::Label {
-						set_halign: gtk::Align::Start,
-						set_label: "What is the the answer?:",
-						set_margin_all: 5,
-				},
-					gtk::TextView {
-						set_margin_all: 5,
-						set_height_request: 100,
-						set_buffer: Some(&model.answer),
-						set_editable: true,
-						set_wrap_mode: gtk::WrapMode::Word,
-					},
-
-					gtk::Button {
-							set_label: "Save",
-							connect_clicked[sender] => move |_| {
-									sender.input(AppMsg::SaveMemItem);
-							}
-					}
-			}
-		}
+	fn init_root() -> Self::Root {
+		gtk::Window::builder()
+			.title("TextView Layered")
+			.default_width(500)
+			.default_height(500)
+			.build()
 	}
 
-	// Initialize the UI
 	fn init(
-		_app_state: Self::Init,
-		root: &Self::Root,
-		sender: ComponentSender<Self>,
-	) -> ComponentParts<Self> {
-		let model = AppModel::default();
+		model: Self::Init,
+		window: &Self::Root,
+		_sender: ComponentSender<Self>,
+	) -> relm4::ComponentParts<Self> {
+		// Initialize the AppModel / state
+		let mut model = AppModel {
+			base_text: model.base_text,
+			overlay_text: model.overlay_text,
+			cursor_index: model.cursor_index,
+			keypress_result: model.keypress_result,
+		};
+		// Start the cursor at 0
+		model.cursor_index = 0;
+		model.keypress_result = true;
 
-		// Insert the macro code generation here from view! macro
-		let widgets = view_output!();
+		// Push the initial TEXT to the base_text
+		model.base_text.set_text(TEXT);
+		model.overlay_text.set_text(TEXT2);
 
+		// Build the UI
+		let vbox = gtk::Box::builder()
+			.orientation(gtk::Orientation::Vertical)
+			.spacing(5)
+			.build();
+
+		let overlay_textview = gtk::TextView::builder()
+			.editable(true)
+			.height_request(50)
+			.wrap_mode(gtk::WrapMode::Word)
+			.buffer(&model.overlay_text)
+			.opacity(0.3)
+			.build();
+
+		let base_textview = gtk::TextView::builder()
+			.editable(true)
+			.height_request(50)
+			.wrap_mode(gtk::WrapMode::Word)
+			.opacity(0.1)
+			.buffer(&model.base_text)
+			.build();
+		base_textview.add_overlay(&overlay_textview, 100, 100);
+
+		let label_index = gtk::Label::builder().label("The current index").build();
+
+		// Overlay parent
+		// Overlay child
+		// Same position
+
+		// let overlayer = gtk::Overlay::builder().build();
+		// overlayer.set_parent(&base_textview);
+		// overlayer.set_opacity(0.50);
+		// // overlayer.add_overlay(&overlay_textview);
+		// overlayer.set_clip_overlay(&overlay_textview, false);
+		// // overlayer.set_child(Some(&overlay_textview));
+
+		window.set_child(Some(&vbox));
+		vbox.set_margin_all(5);
+		vbox.append(&base_textview);
+		vbox.append(&label_index);
+		// vbox.append(&base_textview);
+		// vbox.append(&overlay_textview);
+
+		// inc_button.connect_clicked(clone!(@strong sender => move |_| {
+		// sender.input(AppInput::Increment);
+		// }));
+
+		let widgets = AppWidgets {
+			base_textview,
+			overlay_textview,
+		};
 		ComponentParts { model, widgets }
 	}
 
-	// Update logics for saving
-	fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
-		match msg {
-			AppMsg::SaveMemItem => {
-				let question = self.question.text();
-				println!("Loaded question: {:#?}", question);
-				let answer = self
-					.answer
-					.text(&self.answer.start_iter(), &self.answer.end_iter(), true)
-					.to_string();
-				println!("Loaded TextBuffer: {:#?}", answer);
-				// check if both fields are not empty before saving
-				if !answer.is_empty() && !question.is_empty() {
-					self.list.push(MemItem { question, answer });
-					println!("The updated list: {:#?}", self.list);
-				}
-			},
-		}
+	fn update(&mut self, _message: Self::Input, _sender: ComponentSender<Self>) {
+		// match message {
+		// 	AppInput::Increment => {
+		// 		self.counter = self.counter.wrapping_add(1);
+		// 	},
+		// 	AppInput::Decrement => {
+		// 		self.counter = self.counter.wrapping_sub(1);
+		// 	},
+		// }
+	}
+
+	fn update_view(
+		&self,
+		_widgets: &mut Self::Widgets,
+		_sender: ComponentSender<Self>,
+	) {
+		// Update the view
 	}
 }
 
 fn main() {
-	let app = RelmApp::new("relm4.experiment");
-	// Todo: why do we need to pass it a second time although we have already defined it in fn init?
-	let model = AppModel::default();
-	app.run::<AppModel>(model);
+	let app = RelmApp::new("relm4.test");
+	app.run::<AppModel>(AppModel {
+		base_text: gtk::TextBuffer::new(None),
+		overlay_text: gtk::TextBuffer::new(None),
+		cursor_index: 0,
+		keypress_result: true,
+	});
 }
