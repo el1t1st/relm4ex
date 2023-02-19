@@ -1,3 +1,5 @@
+# 0. Where do you need to initialize the values? In the main or in the fn init? I get an error when running the app. 
+
 # 1. How do you activate the textag_table for textview, so you can use add_tag on it? I assume that the compiler complains that it cannot find the tag background because it doesn't have access to a texttabtable?
 
 I checked:
@@ -52,7 +54,8 @@ But the information I read, doesn't give me enough to actually understand what p
 **NEXT: What I want to do is to listen to a keypress. Knowing the current_index and taking the char from the base_text I can then compare the keypress value with the value in the current_index, and then set the tag to red or green, depending on correct or incorrect.**
 
 # 3. How to tell TextView to use Pango? Or does that work automatically?
+Works out of the box, if you use the texttags.
 
-# 4. Making an editor TextView in Rust from a python/gtk approach?
-**NEXT: Convert the example in [Python/GTK3]() to a Rust/GTK4.**
-[https://github.com/antonovmike/gtk_keyboard_events_listener](https://github.com/antonovmike/gtk_keyboard_events_listener)
+<!-- # 4. Making an editor TextView in Rust from a python/gtk approach? -->
+<!-- **NEXT: Convert the example in [Python/GTK3]() to a Rust/GTK4.** -->
+<!-- [https://github.com/antonovmike/gtk_keyboard_events_listener](https://github.com/antonovmike/gtk_keyboard_events_listener) -->
