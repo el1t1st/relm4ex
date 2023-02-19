@@ -38,13 +38,14 @@ struct AppModel {
 enum AppInput {
 	// Define the Messages
 	CheckChar,
+	BackOneChar,
 }
 
 struct AppWidgets {
 	// We can leave the label for now
 	base_textview: gtk::TextView,
-	label_index: gtk::Label,
-	label_keystroke: gtk::Label,
+	// label_index: gtk::Label,
+	// label_keystroke: gtk::Label,
 }
 
 impl SimpleComponent for AppModel {
@@ -63,39 +64,40 @@ impl SimpleComponent for AppModel {
 	}
 
 	fn init(
-		model: Self::Init,
+		//
+		state: Self::Init,
 		window: &Self::Root,
 		_sender: ComponentSender<Self>,
 	) -> relm4::ComponentParts<Self> {
+		let mut model = state;
 		// Initialize the AppModel / state
-		let mut model = AppModel {
-			base_text: gtk::TextBuffer::new(None),
-			cursor_index: 0,
-			keypress_result: false,
-			css_provider: gtk::CssProvider::new(),
-			display: gtk::gdk::Display::default().unwrap(),
-			text_tag_table: gtk::TextTagTable::new(),
-		};
+		// let mut model = AppModel {
+		// 	base_text: gtk::TextBuffer::new(None),
+		// 	cursor_index: 0,
+		// 	keypress_result: false,
+		// 	css_provider: gtk::CssProvider::new(),
+		// 	display: gtk::gdk::Display::default().unwrap(),
+		// 	text_tag_table: gtk::TextTagTable::new(),
+		// };
 		// Activate CSS Provider
 		// What does this do? And shouldn't we do this before the load_from_path?
 		// model.css_provider.connect_parsing_error(|_, _, error| {
 		// 	println!("{:?}", error);
 		// });
 		//
-		model.css_provider.load_from_path("test.css");
+
+		// model.css_provider.load_from_path("test.css");
+
 		// match ret {
 		// 	Ok(ret) => println!("Worked? {:?}", ret),
 		// 	Err(error) => println!("Worked? {:?}", error),
 		// }
 
-		gtk::StyleContext::add_provider_for_display(
-			&model.display,
-			&model.css_provider,
-			gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-		);
-
-		// Push the initial TEXT to the base_text
-		model.base_text.set_text(TEXT);
+		// gtk::StyleContext::add_provider_for_display(
+		// 	&model.display,
+		// 	&model.css_provider,
+		// 	gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+		// );
 
 		// create tag table
 		model.text_tag_table = model.base_text.tag_table();
@@ -117,22 +119,24 @@ impl SimpleComponent for AppModel {
 		// Build the UI
 		let vbox = gtk::Box::builder()
 			.orientation(gtk::Orientation::Vertical)
+			.spacing(5)
 			.build();
 
 		let base_textview = gtk::TextView::builder()
-			// To connect the keypresses to the base_textview widget we need to set it focusable
 			.focusable(true)
 			.editable(true)
 			.wrap_mode(gtk::WrapMode::Word)
 			.buffer(&model.base_text)
 			.build();
 
+		model.base_text.set_text(TEXT);
+
 		let label_keystroke =
 			gtk::Label::builder().label("Current keystroke:").build();
 		let label_index = gtk::Label::builder().label("Current index").build();
 
 		window.set_child(Some(&vbox));
-		// vbox.set_margin_all(5);
+		vbox.set_margin_all(10);
 		vbox.append(&base_textview);
 		vbox.append(&label_index);
 		vbox.append(&label_index);
@@ -140,11 +144,7 @@ impl SimpleComponent for AppModel {
 		// listen to keyevents
 		// GTK keyboard events listener
 
-		let widgets = AppWidgets {
-			base_textview,
-			label_index,
-			label_keystroke,
-		};
+		let widgets = AppWidgets { base_textview };
 		ComponentParts { model, widgets }
 	}
 
@@ -169,7 +169,7 @@ impl SimpleComponent for AppModel {
 }
 
 fn main() {
-	let app = RelmApp::new("relm4.test");
+	let app = RelmApp::new("relm4.experiment");
 	app.run::<AppModel>(AppModel {
 		base_text: gtk::TextBuffer::new(None),
 		cursor_index: 0,
