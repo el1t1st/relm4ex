@@ -1,15 +1,10 @@
 # 0. Where do you need to initialize the values? In the main or in the fn init? I get an error when running the app. 
 
 # 1. How do you activate the textag_table for textview, so you can use add_tag on it? I assume that the compiler complains that it cannot find the tag background because it doesn't have access to a texttabtable?
+This is fixed. 
 
 I checked:
 - [https://docs.gtk.org/gtk4/class.TextTagTable.html](https://docs.gtk.org/gtk4/class.TextTagTable.html)
-
-But I don't understand how to create it and how to force tag_add to write to it?
-
-NEXT: Once the tag_add works i will work on getting the character and setting that character with a red tag or green tab, and updating the buffer.
-
-- create tag red and green
 - apply the tag to a char with iter(location) and iter_end(location+1)
 - set current_index +1
 
@@ -49,7 +44,7 @@ I think you need to add an event controller to the window: https://gtk-rs.org/gt
 Use this to add the controller: https://gtk-rs.org/gtk4-rs/git/docs/gtk4/prelude/trait.WidgetExt.html#tymethod.add_controller
 ```
 
-But the information I read, doesn't give me enough to actually understand what parameters are available for the method and the controller.
+But the information I read, doesn't give me enough to actually understand what parameters are available for the method and the controller. 
 
 **NEXT: What I want to do is to listen to a keypress. Knowing the current_index and taking the char from the base_text I can then compare the keypress value with the value in the current_index, and then set the tag to red or green, depending on correct or incorrect.**
 
@@ -59,3 +54,5 @@ Works out of the box, if you use the texttags.
 <!-- # 4. Making an editor TextView in Rust from a python/gtk approach? -->
 <!-- **NEXT: Convert the example in [Python/GTK3]() to a Rust/GTK4.** -->
 <!-- [https://github.com/antonovmike/gtk_keyboard_events_listener](https://github.com/antonovmike/gtk_keyboard_events_listener) -->
+
+# 4. How to select one character through 2 iterators ... start and end? 

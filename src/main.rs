@@ -1,3 +1,4 @@
+use gtk::glib::clone;
 use gtk::{
 	prelude::{BoxExt, GtkWindowExt, TextBufferExt, TextTagExt, TextViewExt},
 	traits::WidgetExt,
@@ -55,7 +56,7 @@ impl SimpleComponent for AppModel {
 	fn init(
 		_state: Self::Init,
 		window: &Self::Root,
-		_sender: ComponentSender<Self>,
+		sender: ComponentSender<Self>,
 	) -> relm4::ComponentParts<Self> {
 		// Initialize the AppModel / state
 		let mut model = AppModel {
@@ -90,6 +91,7 @@ impl SimpleComponent for AppModel {
 		// create tag table
 		model.text_tag_table = model.base_text.tag_table();
 		// create tags
+
 		let green_tag = gtk::TextTag::new(Some("green"));
 		green_tag.set_background(Some("green"));
 
@@ -101,11 +103,11 @@ impl SimpleComponent for AppModel {
 		model.text_tag_table.add(&red_tag);
 
 		// Once this works we can add more tags for font, fontsize, ...
-		model.base_text.apply_tag(
-			&red_tag,
-			&model.base_text.start_iter(),
-			&model.base_text.end_iter(),
-		);
+		// model.base_text.apply_tag(
+		// 	&red_tag,
+		// 	&model.base_text.start_iter(),
+		// 	&model.base_text.end_iter(),
+		// );
 
 		model.base_text.place_cursor(&model.base_text.start_iter());
 
@@ -116,6 +118,7 @@ impl SimpleComponent for AppModel {
 			.build();
 
 		let base_textview = gtk::TextView::builder()
+			.height_request(30)
 			.focusable(true)
 			.editable(true)
 			.overwrite(true) // The cursor needs to overwrite
@@ -128,10 +131,23 @@ impl SimpleComponent for AppModel {
 		vbox.set_margin_all(10);
 		vbox.append(&base_textview);
 
-		// get the bounds
-		// set the character to the first char
-		// listen to keyevents
-		// GTK keyboard events listener
+		// base_textview.connect_cursor_notify(
+		// 	clone!(@strong sender => move |base_textview| {
+		// 	// do something
+		// 			let cursor_pos = base_textview.buffer().cursor_position();
+		// 			println!("The cursor position is: {:?}", cursor_pos);
+		// 			println!("The buffer: {:?}", base_textview.buffer());
+		// 			sender.input(AppInput::CheckChar);
+		// 	}),
+		// );
+		//
+		base_textview.connect_preedit_changed(
+			clone!(@strong sender => move |_textbuffer, _text| {
+				// println!("Text incoming closure: {}", text);
+				// println!("Text incomin closure: {}", textbuffer);
+				sender.input(AppInput::CheckChar);
+			}),
+		);
 
 		let widgets = AppWidgets { base_textview };
 		ComponentParts { model, widgets }
@@ -145,7 +161,7 @@ impl SimpleComponent for AppModel {
 				// get current_keystroke
 				// if == add_tag green else add_tag_red
 				// model.current_index.wrapping_add(1);
-				println!("Checking character");
+				println!("Checking character: Booohoo");
 			},
 			AppInput::BackOneChar => {
 				// remove tag from the character with current_index -1
