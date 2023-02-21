@@ -1,193 +1,106 @@
-use gtk::glib::clone;
-use gtk::{
-	prelude::{BoxExt, GtkWindowExt, TextBufferExt, TextTagExt, TextViewExt},
-	traits::WidgetExt,
+use gtk::prelude::{
+	BoxExt, ButtonExt, GtkWindowExt, OrientableExt, TextBufferExt, TextViewExt,
 };
 use relm4::{
-	gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent,
+	gtk::{self, traits::WidgetExt},
+	ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent,
 };
 
-// Since I can't seem to get the overlay working, I will focus
-// first on showing a text in one textview
-// And in the other textview I will type the text
-// And in a label i will show the correct or incorrect
-// That way I can at least have the process of comparing
-// each character and keypress
-// By using Pango it is possible to change the color of
-// characters with start_iter / end_iter and Pango tags
+const TEXT: &str = "Relm4 TextView Experiment";
 
-const TEXT: &str = "Trying to solve the issue in a different why by using TextView with Pango parsing and a keypress listener!";
-
+#[derive(Debug, Default)]
 struct AppModel {
 	base_text: gtk::TextBuffer,
-	cursor_index: u16,
-	// css_provider: gtk::CssProvider,
-	// display: gtk::gdk::Display,
-	text_tag_table: gtk::TextTagTable,
+	tagtable: gtk::TextTagTable,
+	info_label_text: String,
 }
 
 #[derive(Debug)]
-enum AppInput {
-	// Define the Messages
-	CheckChar,
-	BackOneChar,
+enum AppMsg {
+	CheckChar(u32),
+	GoBack,
+	LoadText,
 }
 
-struct AppWidgets {
-	// We can leave the label for now
-	base_textview: gtk::TextView,
-}
-
+#[relm4::component]
 impl SimpleComponent for AppModel {
-	type Input = AppInput;
+	type Init = ();
+	type Input = AppMsg;
 	type Output = ();
-	type Init = AppModel;
-	type Root = gtk::Window;
-	type Widgets = AppWidgets;
 
-	fn init_root() -> Self::Root {
-		gtk::Window::builder()
-			.title("TextView With Pango Colors TextTagTable")
-			.default_width(500)
-			.default_height(500)
-			.build()
-	}
+	view! {
+		gtk::Window {
+			set_title: Some("TextView Experiment"),
+			set_default_width: 300,
+			set_default_height: 300,
 
-	fn init(
-		_state: Self::Init,
-		window: &Self::Root,
-		sender: ComponentSender<Self>,
-	) -> relm4::ComponentParts<Self> {
-		// Initialize the AppModel / state
-		let mut model = AppModel {
-			base_text: gtk::TextBuffer::new(None),
-			cursor_index: 0,
-			// css_provider: gtk::CssProvider::new(),
-			// display: gtk::gdk::Display::default().unwrap(),
-			text_tag_table: gtk::TextTagTable::new(),
-		};
-		// Activate CSS Provider
-		// What does this do? And shouldn't we do this before the load_from_path?
-		// model.css_provider.connect_parsing_error(|_, _, error| {
-		// 	println!("{:?}", error);
-		// });
-		//
+			gtk::Box {
+				set_orientation: gtk::Orientation::Vertical,
+				set_spacing: 5,
+				set_margin_all: 5,
 
-		// model.css_provider.load_from_path("test.css");
+				gtk::TextView {
+					#[watch]
+					set_buffer: Some(&model.base_text),
+					set_editable: true,
+					set_wrap_mode: gtk::WrapMode::WordChar,
+					set_margin_all: 5,
+					set_focusable: true,
+					set_cursor_visible: true,
+					set_overwrite: true,
+				},
+				gtk::Label {
+					#[watch]
+					set_margin_all: 5,
+					set_label: &format!("Label: {}", &model.info_label_text),
+				},
+				gtk::Button {
+					set_label: "Load Text",
+					connect_clicked[sender] => move |_| {
+					sender.input(AppMsg::LoadText);
+				}
+				}
 
-		// match ret {
-		// 	Ok(ret) => println!("Worked? {:?}", ret),
-		// 	Err(error) => println!("Worked? {:?}", error),
-		// }
-
-		// gtk::StyleContext::add_provider_for_display(
-		// 	&model.display,
-		// 	&model.css_provider,
-		// 	gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-		// );
-
-		model.base_text.set_text(TEXT);
-
-		// create tag table
-		model.text_tag_table = model.base_text.tag_table();
-		// create tags
-
-		let green_tag = gtk::TextTag::new(Some("green"));
-		green_tag.set_background(Some("green"));
-
-		let red_tag = gtk::TextTag::new(Some("red"));
-		red_tag.set_background(Some("red"));
-
-		// Add tags to tag_table
-		model.text_tag_table.add(&green_tag);
-		model.text_tag_table.add(&red_tag);
-
-		// Once this works we can add more tags for font, fontsize, ...
-		// model.base_text.apply_tag(
-		// 	&red_tag,
-		// 	&model.base_text.start_iter(),
-		// 	&model.base_text.end_iter(),
-		// );
-
-		model.base_text.place_cursor(&model.base_text.start_iter());
-
-		// Build the UI
-		let vbox = gtk::Box::builder()
-			.orientation(gtk::Orientation::Vertical)
-			.spacing(5)
-			.build();
-
-		let base_textview = gtk::TextView::builder()
-			.height_request(30)
-			.focusable(true)
-			.editable(true)
-			.overwrite(true) // The cursor needs to overwrite
-			.cursor_visible(true)
-			.wrap_mode(gtk::WrapMode::WordChar)
-			.buffer(&model.base_text)
-			.build();
-
-		window.set_child(Some(&vbox));
-		vbox.set_margin_all(10);
-		vbox.append(&base_textview);
-
-		// base_textview.connect_cursor_notify(
-		// 	clone!(@strong sender => move |base_textview| {
-		// 	// do something
-		// 			let cursor_pos = base_textview.buffer().cursor_position();
-		// 			println!("The cursor position is: {:?}", cursor_pos);
-		// 			println!("The buffer: {:?}", base_textview.buffer());
-		// 			sender.input(AppInput::CheckChar);
-		// 	}),
-		// );
-		//
-		base_textview.connect_preedit_changed(
-			clone!(@strong sender => move |_textbuffer, _text| {
-				// println!("Text incoming closure: {}", text);
-				// println!("Text incomin closure: {}", textbuffer);
-				sender.input(AppInput::CheckChar);
-			}),
-		);
-
-		let widgets = AppWidgets { base_textview };
-		ComponentParts { model, widgets }
-	}
-
-	fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-		match message {
-			AppInput::CheckChar => {
-				// get the &model.current_index
-				// take the string[current_index]
-				// get current_keystroke
-				// if == add_tag green else add_tag_red
-				// model.current_index.wrapping_add(1);
-				println!("Checking character: Booohoo");
-			},
-			AppInput::BackOneChar => {
-				// remove tag from the character with current_index -1
-				// &model.current_index.wrapping_sub(1);
-				println!("One character back");
-			},
+			}
 		}
 	}
 
-	fn update_view(
-		&self,
-		_widgets: &mut Self::Widgets,
-		_sender: ComponentSender<Self>,
-	) {
-		// Update the view
-		// the model.text_base needs to update but ...?
+	fn init(
+		_app_state: Self::Init,
+		root: &Self::Root,
+		sender: ComponentSender<Self>,
+	) -> ComponentParts<Self> {
+		// let model = AppModel::default();
+		// Create an instance of the AppModel App State
+		let model = AppModel {
+			base_text: gtk::TextBuffer::new(None),
+			tagtable: gtk::TextTagTable::new(),
+			info_label_text: String::new(),
+		};
+
+		// model.base_text.set_text(TEXT);
+		let widgets = view_output!();
+		ComponentParts { model, widgets }
+	}
+
+	fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+		match msg {
+			AppMsg::CheckChar(position) => {
+				println!("The current curson_index: {}", position)
+			},
+			AppMsg::GoBack => {
+				println!("Go one character back")
+			},
+			AppMsg::LoadText => {
+				println!("Loading Text: {}", TEXT);
+				self.info_label_text = String::from("Loaded");
+				self.base_text.set_text(TEXT);
+			},
+		}
 	}
 }
 
 fn main() {
-	let app = RelmApp::new("relm4.experiment");
-	app.run::<AppModel>(AppModel {
-		base_text: gtk::TextBuffer::new(None),
-		cursor_index: 0,
-		// css_provider: gtk::CssProvider::new(),
-		text_tag_table: gtk::TextTagTable::new(),
-		// display: gtk::gdk::Display::default().unwrap(),
-	});
+	let app = RelmApp::new("relm4.textview.experiment");
+	app.run::<AppModel>(())
 }
