@@ -1,3 +1,5 @@
+// TODO: Adding green and red colors
+// TODO: Connect cursor events and change the color of the lasttyped character
 use gtk::prelude::{
 	BoxExt, ButtonExt, GtkWindowExt, OrientableExt, TextBufferExt, TextViewExt,
 };
@@ -52,7 +54,8 @@ impl SimpleComponent for AppModel {
 				gtk::Label {
 					#[watch]
 					set_margin_all: 5,
-					set_label: &format!("Label: {}", &model.info_label_text),
+					// BUG: The label isn't updated when it is changed
+					set_label: &model.info_label_text,
 				},
 				gtk::Button {
 					set_label: "Load Text",
@@ -94,6 +97,7 @@ impl SimpleComponent for AppModel {
 			AppMsg::LoadText => {
 				println!("Loading Text: {}", TEXT);
 				self.info_label_text = String::from("Loaded");
+				// BUG: I am trying to change the label but it isn't uploaded
 				self.base_text.set_text(TEXT);
 			},
 		}
