@@ -53,9 +53,7 @@ impl SimpleComponent for AppModel {
 				},
 				gtk::Label {
 					#[watch]
-					set_margin_all: 5,
-					// BUG: The label isn't updated when it is changed
-					set_label: &model.info_label_text,
+					set_label: &format!("{}", model.info_label_text),
 				},
 				gtk::Button {
 					set_label: "Load Text",
@@ -95,9 +93,8 @@ impl SimpleComponent for AppModel {
 				println!("Go one character back")
 			},
 			AppMsg::LoadText => {
-				println!("Loading Text: {}", TEXT);
-				self.info_label_text = String::from("Loaded");
-				// BUG: I am trying to change the label but it isn't uploaded
+				self.info_label_text = String::from("Loaded!");
+				println!("Running the LoadText: {}", &self.info_label_text);
 				self.base_text.set_text(TEXT);
 			},
 		}
