@@ -1,4 +1,3 @@
-// TODO: Adding green and red colors
 // TODO: Connect cursor events and change the color of the lasttyped character
 use gtk::prelude::{
 	BoxExt, ButtonExt, GtkWindowExt, OrientableExt, TextBufferExt, TextViewExt,
@@ -27,6 +26,7 @@ enum AppMsg {
 	GoBack,
 	LoadText,
 	ClearText,
+	ChangeTextColor(String),
 }
 
 #[relm4::component]
@@ -69,6 +69,15 @@ impl SimpleComponent for AppModel {
 					set_label: "Clear Text",
 					connect_clicked[sender] => move |_| {
 					sender.input(AppMsg::ClearText);
+					}
+				},
+				gtk::Button {
+		// TODO: Find a way to pass the TextTag correctly to the ChangeColor message so you can use
+		// the TextTag directly in the update function. Ideally the ChangeTextColor parameter type
+		// should be TextTag
+					set_label: "Change Color to Red",
+					connect_clicked[sender] => move |_| {
+						sender.input(AppMsg::ChangeTextColor("red".to_string()));
 					}
 				},
 			}
@@ -124,6 +133,13 @@ impl SimpleComponent for AppModel {
 				self.base_text.set_text("");
 				println!("Running ClearText!")
 			},
+			AppMsg::ChangeTextColor(color) => {
+				println!("The selected color is: {}", color);
+			}, // self.base_text.apply_tag(
+			   // 	&tag,
+			   // 	&self.base_text.start_iter(),
+			   // 	&self.base_text.end_iter(),
+			   // );
 		}
 	}
 }
