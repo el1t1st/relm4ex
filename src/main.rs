@@ -3,8 +3,12 @@
 use gtk::prelude::{
 	BoxExt, ButtonExt, GtkWindowExt, OrientableExt, TextBufferExt, TextViewExt,
 };
+use gtk::TextTagTable;
 use relm4::{
-	gtk::{self, traits::WidgetExt},
+	gtk::{
+		self,
+		traits::{TextTagExt, WidgetExt},
+	},
 	ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent,
 };
 
@@ -84,7 +88,20 @@ impl SimpleComponent for AppModel {
 			info_label_text: String::new(),
 		};
 
-		// model.base_text.set_text(TEXT);
+		// Create the color tags and add them to the tagtable.
+		// 1) Create a tagtable
+		// 2) Create the tags
+		// 3) Add the tags to the tagtable
+		//
+		let green_tag = gtk::TextTag::new(Some("green"));
+		green_tag.set_background(Some("green"));
+
+		let red_tag = gtk::TextTag::new(Some("red"));
+		red_tag.set_background(Some("red"));
+
+		model.tagtable.add(&green_tag);
+		model.tagtable.add(&red_tag);
+
 		let widgets = view_output!();
 		ComponentParts { model, widgets }
 	}
