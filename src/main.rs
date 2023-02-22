@@ -22,6 +22,7 @@ enum AppMsg {
 	CheckChar(u32),
 	GoBack,
 	LoadText,
+	ClearText,
 }
 
 #[relm4::component]
@@ -58,10 +59,14 @@ impl SimpleComponent for AppModel {
 				gtk::Button {
 					set_label: "Load Text",
 					connect_clicked[sender] => move |_| {
-					sender.input(AppMsg::LoadText);
-				}
-				}
-
+						sender.input(AppMsg::LoadText);
+				}},
+				gtk::Button {
+					set_label: "Clear Text",
+					connect_clicked[sender] => move |_| {
+					sender.input(AppMsg::ClearText);
+					}
+				},
 			}
 		}
 	}
@@ -96,6 +101,11 @@ impl SimpleComponent for AppModel {
 				self.info_label_text = String::from("Loaded!");
 				println!("Running the LoadText: {}", &self.info_label_text);
 				self.base_text.set_text(TEXT);
+			},
+			AppMsg::ClearText => {
+				self.info_label_text = String::from("Cleared!");
+				self.base_text.set_text("");
+				println!("Running ClearText!")
 			},
 		}
 	}
