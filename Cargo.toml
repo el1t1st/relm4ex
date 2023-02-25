@@ -6,12 +6,10 @@ edition = "2021"
 [dependencies]
 pango = "0.17.0"
 gdk4 = "0.6.0"
+relm4 = "0.5.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies.relm4]
-relm4 = "0.6.0-alpha.1"
-relm4-components = "0.6.0-alpha.1"
 
 # [dependencies.gtk4]
 # version = "0.5.5"
